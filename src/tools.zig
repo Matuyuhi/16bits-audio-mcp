@@ -485,8 +485,17 @@ fn execWavInfo(allocator: std.mem.Allocator, args: std.json.ObjectMap) ![]const 
     );
 }
 
+fn validatePath(path: []const u8) !void {
+    if (path.len == 0) return error.InvalidWavFile;
+    if (path[0] == '-') return error.InvalidWavFile;
+    if (std.fs.path.isAbsolute(path)) return error.InvalidWavFile;
+    if (std.mem.indexOf(u8, path, "..") != null) return error.InvalidWavFile;
+    if (std.mem.indexOf(u8, path, ":") != null) return error.InvalidWavFile;
+}
+
 fn execWavPlay(allocator: std.mem.Allocator, args: std.json.ObjectMap) ![]const u8 {
     const path = getString(args.get("path")) orelse return error.MissingParam;
+    try validatePath(path);
 
     // Check OS and spawn appropriate player
     const os_tag = @import("builtin").os.tag;
