@@ -11,20 +11,37 @@ pub const JingleConfig = struct {
     tempo_feel: []const u8 = "normal",
 };
 
+const JingleType = enum {
+    stage_clear,
+    game_over,
+    level_up,
+    item_get,
+    boss_clear,
+    victory,
+    defeat,
+    secret_found,
+    save,
+    shop_buy,
+    danger,
+    unlock,
+};
+
 pub fn generate(allocator: std.mem.Allocator, config: JingleConfig) ![]f32 {
-    if (std.mem.eql(u8, config.jingle_type, "stage_clear")) return generateStageClear(allocator, config);
-    if (std.mem.eql(u8, config.jingle_type, "game_over")) return generateGameOver(allocator, config);
-    if (std.mem.eql(u8, config.jingle_type, "level_up")) return generateLevelUp(allocator, config);
-    if (std.mem.eql(u8, config.jingle_type, "item_get")) return generateItemGet(allocator, config);
-    if (std.mem.eql(u8, config.jingle_type, "boss_clear")) return generateBossClear(allocator, config);
-    if (std.mem.eql(u8, config.jingle_type, "victory")) return generateVictory(allocator, config);
-    if (std.mem.eql(u8, config.jingle_type, "defeat")) return generateDefeat(allocator, config);
-    if (std.mem.eql(u8, config.jingle_type, "secret_found")) return generateSecretFound(allocator, config);
-    if (std.mem.eql(u8, config.jingle_type, "save")) return generateSave(allocator, config);
-    if (std.mem.eql(u8, config.jingle_type, "shop_buy")) return generateShopBuy(allocator, config);
-    if (std.mem.eql(u8, config.jingle_type, "danger")) return generateDanger(allocator, config);
-    if (std.mem.eql(u8, config.jingle_type, "unlock")) return generateUnlock(allocator, config);
-    return error.UnknownJingleType;
+    const jingle_type = std.meta.stringToEnum(JingleType, config.jingle_type) orelse return error.UnknownJingleType;
+    return switch (jingle_type) {
+        .stage_clear => generateStageClear(allocator, config),
+        .game_over => generateGameOver(allocator, config),
+        .level_up => generateLevelUp(allocator, config),
+        .item_get => generateItemGet(allocator, config),
+        .boss_clear => generateBossClear(allocator, config),
+        .victory => generateVictory(allocator, config),
+        .defeat => generateDefeat(allocator, config),
+        .secret_found => generateSecretFound(allocator, config),
+        .save => generateSave(allocator, config),
+        .shop_buy => generateShopBuy(allocator, config),
+        .danger => generateDanger(allocator, config),
+        .unlock => generateUnlock(allocator, config),
+    };
 }
 
 fn getSpeedMultiplier(tempo_feel: []const u8) f32 {
