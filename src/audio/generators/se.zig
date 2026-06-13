@@ -11,31 +11,56 @@ pub const SeConfig = struct {
     seed: u32 = 0,
 };
 
+const SeType = enum {
+    jump,
+    hit,
+    coin,
+    explosion,
+    laser,
+    powerup,
+    @"error",
+    footstep,
+    menu_select,
+    menu_cancel,
+    dash,
+    shield,
+    heal,
+    charge,
+    warp,
+    door,
+    @"switch",
+    splash,
+    wind,
+    thunder,
+};
+
 pub fn generate(allocator: std.mem.Allocator, config: SeConfig) ![]f32 {
     if (config.seed > 0) {
         oscillator.resetNoise(config.seed);
     }
-    if (std.mem.eql(u8, config.se_type, "jump")) return generateJump(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "hit")) return generateHit(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "coin")) return generateCoin(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "explosion")) return generateExplosion(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "laser")) return generateLaser(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "powerup")) return generatePowerup(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "error")) return generateError(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "footstep")) return generateFootstep(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "menu_select")) return generateMenuSelect(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "menu_cancel")) return generateMenuCancel(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "dash")) return generateDash(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "shield")) return generateShield(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "heal")) return generateHeal(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "charge")) return generateCharge(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "warp")) return generateWarp(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "door")) return generateDoor(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "switch")) return generateSwitch(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "splash")) return generateSplash(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "wind")) return generateWind(allocator, config);
-    if (std.mem.eql(u8, config.se_type, "thunder")) return generateThunder(allocator, config);
-    return error.UnknownSeType;
+    const se_type = std.meta.stringToEnum(SeType, config.se_type) orelse return error.UnknownSeType;
+    return switch (se_type) {
+        .jump => generateJump(allocator, config),
+        .hit => generateHit(allocator, config),
+        .coin => generateCoin(allocator, config),
+        .explosion => generateExplosion(allocator, config),
+        .laser => generateLaser(allocator, config),
+        .powerup => generatePowerup(allocator, config),
+        .@"error" => generateError(allocator, config),
+        .footstep => generateFootstep(allocator, config),
+        .menu_select => generateMenuSelect(allocator, config),
+        .menu_cancel => generateMenuCancel(allocator, config),
+        .dash => generateDash(allocator, config),
+        .shield => generateShield(allocator, config),
+        .heal => generateHeal(allocator, config),
+        .charge => generateCharge(allocator, config),
+        .warp => generateWarp(allocator, config),
+        .door => generateDoor(allocator, config),
+        .@"switch" => generateSwitch(allocator, config),
+        .splash => generateSplash(allocator, config),
+        .wind => generateWind(allocator, config),
+        .thunder => generateThunder(allocator, config),
+    };
 }
 
 // ============================================================
