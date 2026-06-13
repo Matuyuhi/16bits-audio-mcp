@@ -318,6 +318,23 @@ test "midiToHz MIDI 69 is A4" {
     try std.testing.expectApproxEqAbs(@as(f32, 440.0), hz, 0.01);
 }
 
+test "parseChordQuality returns correct enum for valid strings" {
+    try std.testing.expectEqual(ChordQuality.major_chord, try parseChordQuality("major"));
+    try std.testing.expectEqual(ChordQuality.minor_chord, try parseChordQuality("minor"));
+    try std.testing.expectEqual(ChordQuality.diminished, try parseChordQuality("diminished"));
+    try std.testing.expectEqual(ChordQuality.augmented, try parseChordQuality("augmented"));
+    try std.testing.expectEqual(ChordQuality.sus2, try parseChordQuality("sus2"));
+    try std.testing.expectEqual(ChordQuality.sus4, try parseChordQuality("sus4"));
+    try std.testing.expectEqual(ChordQuality.seventh, try parseChordQuality("seventh"));
+}
+
+test "parseChordQuality returns error for invalid strings" {
+    try std.testing.expectError(error.InvalidChordQuality, parseChordQuality(""));
+    try std.testing.expectError(error.InvalidChordQuality, parseChordQuality("invalid"));
+    try std.testing.expectError(error.InvalidChordQuality, parseChordQuality("MAJOR"));
+    try std.testing.expectError(error.InvalidChordQuality, parseChordQuality("Minor"));
+}
+
 /// Get chord tones as semitone offsets from chord root
 pub fn getChordTones(quality: ChordQuality) []const u8 {
     return switch (quality) {

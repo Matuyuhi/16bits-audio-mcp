@@ -7,3 +7,4 @@ zig-out/
 .idea
 zig/
 zig.tar.xz
+zig-linux-x86_64*
