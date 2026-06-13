@@ -199,3 +199,15 @@ test "ADSR reset brings back to attack phase" {
     try testing.expectEqual(Phase.attack, adsr.phase);
     try testing.expectApproxEqAbs(@as(f32, 0.0), adsr.level, 0.001);
 }
+
+test "generateNote returns an empty slice" {
+    const testing = std.testing;
+    const config = AdsrConfig{ .attack_ms = 10.0, .decay_ms = 50.0, .sustain_level = 0.7, .release_ms = 100.0 };
+    const sample_rate = 44100.0;
+    const hold_samples: usize = 44100;
+
+    const result = generateNote(config, sample_rate, hold_samples);
+
+    // As per the placeholder implementation, it should return an empty slice
+    try testing.expectEqual(@as(usize, 0), result.len);
+}

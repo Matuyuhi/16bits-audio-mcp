@@ -259,3 +259,84 @@ test "crossfade blends endpoints" {
     // i=4: t=0.8, buf[4] = 0.0*0.8 + buf[19]*0.2 = 0.2
     try testing.expectApproxEqAbs(@as(f32, 0.2), buf[4], 1e-5);
 }
+
+test "concatSegments basic concatenation" {
+    const testing = std.testing;
+    const allocator = testing.allocator;
+
+    const a = [_]f32{ 1.0, 1.0 };
+    const b = [_]f32{ 0.5, 0.5 };
+    const segments = [_]ConcatSegment{
+        .{ .samples = &a, .gain = 1.0 },
+        .{ .samples = &b, .gain = 0.5 },
+    };
+
+    const output = try concatSegments(allocator, &segments, 0, 0);
+    defer allocator.free(output);
+
+    try testing.expectEqual(@as(usize, 4), output.len);
+    try testing.expectApproxEqAbs(@as(f32, 1.0), output[0], 1e-5);
+    try testing.expectApproxEqAbs(@as(f32, 1.0), output[1], 1e-5);
+    try testing.expectApproxEqAbs(@as(f32, 0.25), output[2], 1e-5); // b.gain = 0.5, b[0] = 0.5
+    try testing.expectApproxEqAbs(@as(f32, 0.25), output[3], 1e-5);
+}
+
+test "concatSegments with gap" {
+    const testing = std.testing;
+    const allocator = testing.allocator;
+
+    const a = [_]f32{ 1.0 };
+    const b = [_]f32{ 0.5 };
+    const segments = [_]ConcatSegment{
+        .{ .samples = &a, .gain = 1.0 },
+        .{ .samples = &b, .gain = 1.0 },
+    };
+
+    const output = try concatSegments(allocator, &segments, 2, 0);
+    defer allocator.free(output);
+
+    try testing.expectEqual(@as(usize, 4), output.len);
+    try testing.expectApproxEqAbs(@as(f32, 1.0), output[0], 1e-5);
+    try testing.expectApproxEqAbs(@as(f32, 0.0), output[1], 1e-5);
+    try testing.expectApproxEqAbs(@as(f32, 0.0), output[2], 1e-5);
+    try testing.expectApproxEqAbs(@as(f32, 0.5), output[3], 1e-5);
+}
+
+test "concatSegments with crossfade" {
+    const testing = std.testing;
+    const allocator = testing.allocator;
+
+    const a = [_]f32{ 1.0, 1.0, 1.0, 1.0 };
+    const b = [_]f32{ 0.5, 0.5, 0.5, 0.5 };
+    const segments = [_]ConcatSegment{
+        .{ .samples = &a, .gain = 1.0 },
+        .{ .samples = &b, .gain = 1.0 },
+    };
+
+    // Crossfade 2 samples.
+    // len: 4 + 4 - 2 = 6
+    const output = try concatSegments(allocator, &segments, 0, 2);
+    defer allocator.free(output);
+
+    try testing.expectEqual(@as(usize, 6), output.len);
+
+    // a[0], a[1] are normal
+    try testing.expectApproxEqAbs(@as(f32, 1.0), output[0], 1e-5);
+    try testing.expectApproxEqAbs(@as(f32, 1.0), output[1], 1e-5);
+    // crossfade region
+    // idx 2: a[2] * 1.0 + b[0] * 0.0 = 1.0
+    try testing.expectApproxEqAbs(@as(f32, 1.0), output[2], 1e-5);
+    // idx 3: a[3] * 0.5 + b[1] * 0.5 = 1.0 * 0.5 + 0.5 * 0.5 = 0.75
+    try testing.expectApproxEqAbs(@as(f32, 0.75), output[3], 1e-5);
+    // b[2], b[3] are normal
+    try testing.expectApproxEqAbs(@as(f32, 0.5), output[4], 1e-5);
+    try testing.expectApproxEqAbs(@as(f32, 0.5), output[5], 1e-5);
+}
+
+test "concatSegments empty returns error" {
+    const testing = std.testing;
+    const allocator = testing.allocator;
+
+    const segments = [_]ConcatSegment{};
+    try testing.expectError(error.EmptyMix, concatSegments(allocator, &segments, 0, 0));
+}
