@@ -5,3 +5,4 @@ zig-out/
 .DS_Store
 .vscode
 .idea
+zig-linux-x86_64*
