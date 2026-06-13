@@ -132,6 +132,20 @@ test "noise reset produces same sequence" {
 
 test "parseWaveform" {
     const testing = std.testing;
+
+    // Happy path: all supported waveforms
     try testing.expectEqual(Waveform.sine, parseWaveform("sine").?);
+    try testing.expectEqual(Waveform.square, parseWaveform("square").?);
+    try testing.expectEqual(Waveform.sawtooth, parseWaveform("sawtooth").?);
+    try testing.expectEqual(Waveform.triangle, parseWaveform("triangle").?);
+    try testing.expectEqual(Waveform.pulse, parseWaveform("pulse").?);
+    try testing.expectEqual(Waveform.noise, parseWaveform("noise").?);
+
+    // Edge cases: unknown strings, empty strings, different casing
     try testing.expect(parseWaveform("invalid") == null);
+    try testing.expect(parseWaveform("unknown") == null);
+    try testing.expect(parseWaveform("") == null);
+    try testing.expect(parseWaveform("SINE") == null);
+    try testing.expect(parseWaveform("Sine") == null);
+    try testing.expect(parseWaveform(" pulse") == null);
 }
